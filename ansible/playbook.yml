@@ -1,0 +1,38 @@
+---
+- name: Configure portfolio server
+  hosts: portfolio
+  become: true
+
+  vars:
+    docker_image: "achrafacheche/portfolio:v1"
+    container_name: "portfolio"
+
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Install Docker
+      apt:
+        name: docker.io
+        state: present
+
+    - name: Start and enable Docker
+      systemd:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Pull portfolio image
+      community.docker.docker_image:
+        name: "{{ docker_image }}"
+        source: pull
+
+    - name: Run portfolio container
+      community.docker.docker_container:
+        name: "{{ container_name }}"
+        image: "{{ docker_image }}"
+        state: started
+        restart_policy: always
+        ports:
+          - "80:80"
